@@ -10,44 +10,51 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # 1. نصب اصولی جاوا (مخصوص اندروید)
+      - name: Free Disk Space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: false
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # 2. نصب پایتون
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.9'
 
-      # 3. نصب وابستگی‌های ضروری (لیست سبک و بدون تداخل)
       - name: Install System Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
             build-essential git zip unzip \
+            pkg-config libtool libtool-bin \
+            autoconf automake autopoint gettext \
             libffi-dev libssl-dev libltdl-dev \
-            autoconf libtool pkg-config \
-            zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake
+            zlib1g-dev libncurses5-dev libncursesw5-dev \
+            libtinfo5 cmake libstdc++6
 
-      # 4. نصب بیلدوزر و سایتون (نسخه هماهنگ)
-      - name: Install Buildozer & Cython
+      - name: Install Buildozer
         run: |
           pip install --upgrade pip
-          pip install buildozer
-          pip install cython==0.29.33
+          pip install buildozer cython==0.29.33
 
-      # 5. دستور ساخت فایل APK
-      - name: Build with Buildozer
+      - name: Build APK
         run: |
+          rm -rf .buildozer
           yes | buildozer android debug
 
-      # 6. آپلود فایل نهایی
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: package
+          name: Fazesh-App
           path: bin/*.apk
