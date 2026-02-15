@@ -10,37 +10,42 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # 1. نصب پایتون
-      - name: Set up Python
+      # 1. نصب اصولی جاوا (مخصوص اندروید)
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # 2. نصب پایتون
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.10'
 
-      # 2. نصب پیش‌نیازهای سیستمی (دقیقاً مثل لینوکس واقعی)
+      # 3. نصب وابستگی‌های ضروری (لیست سبک و بدون تداخل)
       - name: Install System Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            python3-pip build-essential git python3 \
-            python3-dev ffmpeg libsdl2-dev libsdl2-image-dev \
-            libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev \
-            libswscale-dev libavformat-dev libavcodec-dev \
-            zlib1g-dev libgstreamer1.0 \
-            gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
-            libltdl-dev libffi-dev libssl-dev autoconf autotools-dev openjdk-17-jdk unzip
+            build-essential git zip unzip \
+            libffi-dev libssl-dev libltdl-dev \
+            autoconf libtool pkg-config \
+            zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake
 
-      # 3. نصب بیلدوزر
-      - name: Install Buildozer
+      # 4. نصب بیلدوزر و سایتون (نسخه هماهنگ)
+      - name: Install Buildozer & Cython
         run: |
           pip install --upgrade pip
-          pip install buildozer cython==0.29.33
+          pip install buildozer
+          pip install cython==0.29.33
 
-      # 4. شروع ساخت فایل APK (با تایید خودکار)
+      # 5. دستور ساخت فایل APK
       - name: Build with Buildozer
         run: |
           yes | buildozer android debug
 
-      # 5. آپلود فایل نهایی
+      # 6. آپلود فایل نهایی
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
