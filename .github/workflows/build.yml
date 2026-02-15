@@ -1,35 +1,46 @@
 name: Build Android APK
-
 on:
   push:
     branches: [ "main" ]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@v4
 
-      # آزاد کردن فضای دیسک برای جلوگیری از خطا
-      - name: Free Disk Space
-        uses: jlumbroso/free-disk-space@main
+      # 1. نصب پایتون
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          tool-cache: false
-          android: false
-          dotnet: true
-          haskell: true
-          large-packages: true
-          docker-images: true
-          swap-storage: true
+          python-version: '3.9'
 
+      # 2. نصب پیش‌نیازهای سیستمی (دقیقاً مثل لینوکس واقعی)
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            python3-pip build-essential git python3 \
+            python3-dev ffmpeg libsdl2-dev libsdl2-image-dev \
+            libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev \
+            libswscale-dev libavformat-dev libavcodec-dev \
+            zlib1g-dev libgstreamer1.0 \
+            gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
+            libltdl-dev libffi-dev libssl-dev autoconf autotools-dev openjdk-17-jdk unzip
+
+      # 3. نصب بیلدوزر
+      - name: Install Buildozer
+        run: |
+          pip install --upgrade pip
+          pip install buildozer cython==0.29.33
+
+      # 4. شروع ساخت فایل APK (با تایید خودکار)
       - name: Build with Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v1
-        id: buildozer
-        with:
-          command: buildozer android debug
-          buildozer_version: master
+        run: |
+          yes | buildozer android debug
 
+      # 5. آپلود فایل نهایی
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
